@@ -1,0 +1,7 @@
+{
+  "appId": "com.example.invoiceTotalizer",
+  "asar": true,
+  "files": ["**/*"],
+  "mac": { "target": "dmg" },
+  "win": { "target": "nsis" }
+}

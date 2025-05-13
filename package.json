@@ -1,0 +1,21 @@
+{
+  "name": "invoice-totalizer",
+  "version": "0.1.0",
+  "description": "Electron app that extracts amounts from PDF invoices and shows the total",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electronmon .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "electron": "^29.1.1",
+    "pdfjs-dist": "^4.2.67",
+    "@electron/remote": "^2.2.2"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.13.3",
+    "electronmon": "^0.2.0"
+  },
+  "engines": { "node": ">=18" }
+}
