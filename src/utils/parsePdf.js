@@ -6,9 +6,9 @@
  */
 
 const fs = require('fs');
-const pdfjsLib = require('pdfjs-dist');
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = require.resolve('pdfjs-dist/build/pdf.worker.js');
+const { getDocument, GlobalWorkerOptions } = require('pdfjs-dist/legacy/build/pdf.js');
+const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.js');
+GlobalWorkerOptions.workerSrc = workerPath;
 
 /**
  * PDF文書から金額を抽出する
@@ -19,7 +19,7 @@ async function extractAmountsFromPDF(filePath) {
   try {
     const data = new Uint8Array(await fs.promises.readFile(filePath));
     
-    const pdfDocument = await pdfjsLib.getDocument({ data }).promise;
+    const pdfDocument = await getDocument({ data }).promise;
     
     const textByPage = await extractTextFromAllPages(pdfDocument);
     
@@ -89,6 +89,10 @@ function extractAmounts(textByPage) {
     
     /([-+]?\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*円/gi,
     
+    /-(¥|￥|JPY)?\s*(\d{1,3}(?:,\d{3})*(?:\.\d+)?)/gi,
+    
+    /値引き\s*-\s*(\d{1,3}(?:,\d{3})*(?:\.\d+)?)/gi,
+    
     /([-+]?\d{1,3}(?:,\d{3})*(?:\.\d+)?)/gi
   ];
   
@@ -103,8 +107,19 @@ function extractAmounts(textByPage) {
       for (const regex of moneyRegexPatterns) {
         let match;
         while ((match = regex.exec(line)) !== null) {
-          const amountStr = match[1].replace(/,/g, '');
-          const amount = parseFloat(amountStr);
+          let amountStr;
+          let amount;
+          
+          if (regex.toString().includes('-(¥|￥|JPY)?')) {
+            amountStr = match[2] ? match[2].replace(/,/g, '') : '';
+            amount = -parseFloat(amountStr);
+          } else if (regex.toString().includes('値引き')) {
+            amountStr = match[1] ? match[1].replace(/,/g, '') : '';
+            amount = -parseFloat(amountStr);
+          } else {
+            amountStr = match[1] ? match[1].replace(/,/g, '') : '';
+            amount = parseFloat(amountStr);
+          }
           
           if (!isNaN(amount)) {
             let priority = 0;
@@ -117,7 +132,8 @@ function extractAmounts(textByPage) {
                   nextLine.toLowerCase().indexOf(label.toLowerCase()) === -1 ? 100 : 10
                 );
                 
-                priority = Math.max(priority, 1000 - labelDistance);
+                const labelBoost = label === '請求金額' ? 500 : 0;
+                priority = Math.max(priority, 1000 - labelDistance + labelBoost);
               }
             }
             
@@ -173,5 +189,9 @@ function findPriorityAmount(extractedAmounts) {
 }
 
 module.exports = {
-  extractAmountsFromPDF
+  extractAmountsFromPDF,
+  extractAmounts,
+  extractTextFromAllPages,
+  findPriorityAmount,
+  calculateTotal
 };

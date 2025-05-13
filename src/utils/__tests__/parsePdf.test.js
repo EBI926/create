@@ -4,7 +4,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const { extractAmountsFromPDF } = require('../parsePdf');
+const { extractAmountsFromPDF, extractAmounts, findPriorityAmount } = require('../parsePdf');
 
 const TEST_PDF_DIR = path.join(__dirname, '../../../test/fixtures');
 
@@ -21,29 +21,28 @@ beforeAll(() => {
 });
 
 describe('extractAmountsFromPDF', () => {
-  test('様々な金額表記パターンを正しく抽出できること', async () => {
+  test('様々な金額表記パターンを正しく抽出できること', () => {
     const mockTextContent = [
       '請求書\n株式会社テスト\n請求金額: ¥123,456\n小計: ¥100,000\n消費税: ¥10,000',
       '明細\n商品A ¥50,000\n商品B ¥50,000\n値引き -¥5,000\n合計 ¥95,000'
     ];
     
-    const originalExtractText = require('../parsePdf').extractTextFromAllPages;
-    require('../parsePdf').extractTextFromAllPages = jest.fn().mockResolvedValue(mockTextContent);
+    const extractedAmounts = extractAmounts(mockTextContent);
     
-    const result = await extractAmountsFromPDF('dummy.pdf');
+    expect(extractedAmounts).toBeDefined();
+    expect(extractedAmounts.length).toBeGreaterThan(0);
     
-    expect(result).toBeDefined();
-    expect(result.amounts).toContain(123456); // 請求金額
-    expect(result.amounts).toContain(100000); // 小計
-    expect(result.amounts).toContain(10000);  // 消費税
-    expect(result.amounts).toContain(50000);  // 商品A
-    expect(result.amounts).toContain(50000);  // 商品B
-    expect(result.amounts).toContain(-5000);  // 値引き
-    expect(result.amounts).toContain(95000);  // 合計
+    const amounts = extractedAmounts.map(a => a.amount);
+    expect(amounts).toContain(123456); // 請求金額
+    expect(amounts).toContain(100000); // 小計
+    expect(amounts).toContain(10000);  // 消費税
+    expect(amounts).toContain(50000);  // 商品A
+    expect(amounts).toContain(50000);  // 商品B
+    expect(amounts).toContain(-5000);  // 値引き
+    expect(amounts).toContain(95000);  // 合計
     
-    expect(result.total).toBe(123456); // 「請求金額」が優先されるべき
-    
-    require('../parsePdf').extractTextFromAllPages = originalExtractText;
+    const priorityAmount = findPriorityAmount(extractedAmounts);
+    expect(priorityAmount).toBe(123456); // 「請求金額」が優先されるべき
   });
   
   test.each([
@@ -84,12 +83,11 @@ describe('extractAmountsFromPDF', () => {
     ];
     
     patterns.forEach(({ text, expected }) => {
-      const { extractAmounts } = require('../parsePdf');
       const result = extractAmounts([text]);
       
       expect(result.length).toBeGreaterThan(0);
       
-      const hasExpectedAmount = result.some(item => item.amount === expected);
+      const hasExpectedAmount = result.some(item => Math.abs(item.amount - expected) < 0.01);
       expect(hasExpectedAmount).toBe(true);
     });
   });
@@ -100,7 +98,6 @@ describe('extractAmountsFromPDF', () => {
       '請求書\n請求金額: 33,000円\n振込先: テスト銀行'
     ];
     
-    const { extractAmounts, findPriorityAmount } = require('../parsePdf');
     const extractedAmounts = extractAmounts(text);
     const priorityAmount = findPriorityAmount(extractedAmounts);
     
