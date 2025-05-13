@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const remote = require('@electron/remote/main');
+const { extractAmountsFromPDF } = require('./src/utils/parsePdf');
 
 remote.initialize();
 
@@ -72,26 +73,3 @@ ipcMain.handle('process-pdfs', async (event, filePaths) => {
   
   return results;
 });
-
-async function extractAmountsFromPDF(filePath) {
-  try {
-    
-    const filename = path.basename(filePath);
-    const seed = filename.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    
-    const numAmounts = (seed % 3) + 1; // 1-3 amounts per file
-    const amounts = [];
-    let total = 0;
-    
-    for (let i = 0; i < numAmounts; i++) {
-      const amount = 1000 + Math.floor((seed * (i + 1) * 123) % 49000);
-      amounts.push(amount);
-      total += amount;
-    }
-    
-    return { amounts, total };
-  } catch (error) {
-    console.error('Error extracting amounts:', error);
-    throw error;
-  }
-}
