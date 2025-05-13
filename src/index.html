@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>請求書計算アプリ</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>請求書計算アプリ</h1>
+    
+    <div class="upload-section">
+      <button id="select-pdfs" class="btn primary">PDFファイルを選択</button>
+      <p id="file-count">選択されたファイル: 0</p>
+    </div>
+    
+    <div class="results-section" id="results-section">
+      <h2>計算結果</h2>
+      <div class="summary">
+        <div class="summary-item">
+          <span>処理済みファイル:</span>
+          <span id="processed-count">0</span>
+        </div>
+        <div class="summary-item">
+          <span>合計金額:</span>
+          <span id="total-amount">¥0</span>
+        </div>
+      </div>
+      
+      <div class="file-list" id="file-list">
+        <!-- File results will be displayed here -->
+      </div>
+    </div>
+  </div>
+  
+  <script src="renderer.js"></script>
+</body>
+</html>

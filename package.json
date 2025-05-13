@@ -1,0 +1,27 @@
+{
+  "name": "invoice-calculator",
+  "version": "1.0.0",
+  "description": "PDFで届く複数の請求書をアップロードして、合計額を自動で算出するデスクトップアプリ",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "package": "electron-packager . invoice-calculator --platform=win32,darwin --arch=x64 --out=dist/"
+  },
+  "keywords": [
+    "invoice",
+    "pdf",
+    "calculator"
+  ],
+  "author": "Devin AI",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^36.2.0",
+    "electron-builder": "^26.0.12",
+    "pdf-parse": "^1.1.1",
+    "pdf.js-extract": "^0.2.1"
+  },
+  "devDependencies": {
+    "electron-packager": "^17.1.2"
+  }
+}
